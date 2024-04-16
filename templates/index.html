@@ -76,7 +76,7 @@
 
     <script>
         function getNamespaces() {
-            fetch('/k/get-namespaces')
+            fetch('api/v1/core/namespaces/get-namespaces')
                 .then(response => response.json())
                 .then(data => {
                     populateNamespaceDropDown(data);
@@ -86,7 +86,7 @@
                 })
         }
         function getPodLogs(podName, namespace) {
-            fetch('/k/get-pod-logs/' + encodeURIComponent(podName) + '/' + encodeURIComponent(namespace))
+            fetch('/api/v1/core/pods/get-pod-logs/' + encodeURIComponent(podName) + '/' + encodeURIComponent(namespace))
                 .then(response => response.json())
                 .then(data => {
                     renderPodLogs(data);
@@ -96,7 +96,7 @@
                 })
         }
         function getNamespacePods(namespace) {
-            fetch('/k/get-pods:' + encodeURIComponent(namespace))
+            fetch('/api/v1/core/pods/get-pods:' + encodeURIComponent(namespace))
                 .then(response => response.json())
                 .then(data => {
                     renderPodItems(data);
@@ -106,7 +106,7 @@
                 })
         }
         function getNamespaceEvents(namespace) {
-            fetch('/k/get-namespace-events:' + encodeURIComponent(namespace))
+            fetch('/api/v1/core/namespaces/get-namespace-events:' + encodeURIComponent(namespace))
                 .then(response => response.json())
                 .then(data => {
                     addEventItem(data);

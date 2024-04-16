@@ -32,24 +32,41 @@ func (a *APIServer) Run() {
 	router.Static("/static", ".static")
 	router.LoadHTMLGlob("templates/*.html")
 
-	a.HandleRoutes(router)
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.html", nil)
+	})
+
+	a.HandleCoreGroupRoutes(router)
+	a.HandleAppsGroupRoutes(router)
 
 	router.Run(":" + a.ListenAddr)
 }
 
-func (a *APIServer) HandleRoutes(router *gin.Engine) {
+func (a *APIServer) HandleAppsGroupRoutes(router *gin.Engine) {
+	// Group routes for deployments under "/api/v1/deployments"
+	deployments := router.Group("/api/v1/apps/deployments")
+	{
+		// Route for creating a new Deployment
+		deployments.PUT("/:namespace", a.createDeploymentHandler)
+		// Route for deleting a Deployment
+		deployments.DELETE("/:namespace/:name", a.deleteDeploymentHandler)
+		// Route for updating a Deployment
+		deployments.PATCH("/:namespace", a.patchDeploymentHandler)
+	}
+}
 
-	router.GET("/k/get-pod-logs/:podName/:namespace", a.getPodLogsHandler)
-	router.PUT("k/create-deployment/:namespace", a.createDeploymentHandler)
-	router.PATCH("k/patch-deployment/:namespace", a.patchDeploymentHandler)
-	router.DELETE("k/delete-deployment/:namespace/:name", a.deleteDeploymentHandler)
-	router.GET("/k/get-pods:namespace", a.getPodsHandler)
-	router.GET("/k/get-namespaces", a.getNamespacesHandler)
-	router.GET("/k/get-namespace-events:namespace", a.getNamespaceEventsHander)
+func (a *APIServer) HandleCoreGroupRoutes(router *gin.Engine) {
 
-	router.GET("/", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "index.html", nil)
-	})
+	pods := router.Group("/api/v1/core/pods")
+	{
+		pods.GET("/get-pod-logs/:podName/:namespace", a.getPodLogsHandler)
+		pods.GET("/get-pods:namespace", a.getPodsHandler)
+	}
+	namespaces := router.Group("/api/v1/core/namespaces")
+	{
+		namespaces.GET("/get-namespaces", a.getNamespacesHandler)
+		namespaces.GET("/get-namespace-events:namespace", a.getNamespaceEventsHander)
+	}
 }
 func (a *APIServer) PrintServerBanner() {
 	fmt.Printf(`
