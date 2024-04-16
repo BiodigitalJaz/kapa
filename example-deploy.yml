@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+      - name: example-container
+        image: nginx
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "500m" # 0.5 CPU core
+            memory: "512Mi" # 512MB memory
+          requests:
+            cpu: "250m" # 0.25 CPU core
+            memory: "256Mi" # 256MB memory

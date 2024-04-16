@@ -37,6 +37,9 @@ func (a *APIServer) Run() {
 func (a *APIServer) HandleRoutes(router *gin.Engine) {
 
 	router.GET("/k/get-pod-logs/:podName/:namespace", a.getPodLogsHandler)
+	router.PUT("k/create-deployment/:namespace", a.createDeploymentHandler)
+	router.PATCH("k/patch-deployment/:namespace", a.patchDeploymentHandler)
+	router.DELETE("k/delete-deployment/:namespace/:name", a.deleteDeploymentHandler)
 	router.GET("/k/get-pods:namespace", a.getPodsHandler)
 	router.GET("/k/get-namespaces", a.getNamespacesHandler)
 	router.GET("/k/get-namespace-events:namespace", a.getNamespaceEventsHander)

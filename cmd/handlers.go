@@ -1,16 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -35,6 +41,130 @@ func setupK8Access() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+func (a *APIServer) createDeployment(namespace string, deploymentData v1.Deployment) (string, error) {
+
+	// Create the Deployment in the Kubernetes cluster
+	_, err := a.k8Client.AppsV1().Deployments(namespace).Create(context.Background(), &deploymentData, metav1.CreateOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	return "Deployment Created", nil
+}
+
+func (a *APIServer) patchDeployment(namespace string, deploymentData v1.Deployment) (string, error) {
+
+	// Create the Deployment in the Kubernetes cluster
+	_, err := a.k8Client.AppsV1().Deployments(namespace).Update(context.Background(), &deploymentData, metav1.UpdateOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	return "Deployment Updated", nil
+}
+
+func (a *APIServer) deleteDeployment(namespace, name string) (string, error) {
+
+	// Create the Deployment in the Kubernetes cluster
+	err := a.k8Client.AppsV1().Deployments(namespace).Delete(context.Background(), name, metav1.DeleteOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	return "Deployment Deleted", nil
+}
+func (a *APIServer) deleteDeploymentHandler(ctx *gin.Context) {
+	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
+	name := strings.TrimPrefix(ctx.Param("name"), ":")
+
+	status, err := a.deleteDeployment(namespace, name)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"deployment error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		namespace: status,
+	})
+}
+
+func (a *APIServer) patchDeploymentHandler(ctx *gin.Context) {
+	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
+
+	// Read YAML from request body
+	deploymentYAML, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	// Parse YAML into unstructured object
+	var deploymentObj unstructured.Unstructured
+	decoder := yaml.NewYAMLOrJSONDecoder(io.NopCloser(bytes.NewReader(deploymentYAML)), 4096)
+	if err := decoder.Decode(&deploymentObj); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse YAML"})
+		return
+	}
+
+	// Convert unstructured object to typed Deployment
+	var typedDeployment v1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObj.Object, &typedDeployment)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to convert to typed Deployment"})
+		return
+	}
+
+	status, err := a.patchDeployment(namespace, typedDeployment)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"deployment error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		namespace: status,
+	})
+}
+
+func (a *APIServer) createDeploymentHandler(ctx *gin.Context) {
+	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
+
+	// Read YAML from request body
+	deploymentYAML, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	// Parse YAML into unstructured object
+	var deploymentObj unstructured.Unstructured
+	decoder := yaml.NewYAMLOrJSONDecoder(io.NopCloser(bytes.NewReader(deploymentYAML)), 4096)
+	if err := decoder.Decode(&deploymentObj); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse YAML"})
+		return
+	}
+
+	// Convert unstructured object to typed Deployment
+	var typedDeployment v1.Deployment
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(deploymentObj.Object, &typedDeployment)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to convert to typed Deployment"})
+		return
+	}
+
+	status, err := a.createDeployment(namespace, typedDeployment)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"deployment error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		namespace: status,
+	})
 }
 
 func (a *APIServer) getPods(namespace string) ([]string, error) {
