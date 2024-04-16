@@ -11,7 +11,6 @@
 ### Tech Stack
 * [GO](https://go.dev) 
 * [GIN](https://gin-gonic.com)
-* [HTMX](https://htmx.org)
 * [Bootstrap CSS](https://getbootstrap.com)
 
 ### Preview

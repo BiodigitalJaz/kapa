@@ -16,9 +16,12 @@ func NewAPIServer(listenAddr string) *APIServer {
 		log.Printf("error setting up k8's client: %s\n", err)
 	}
 
+	deploymentService := NewKubernetesDeploymentService(k8Client)
+
 	return &APIServer{
-		ListenAddr: listenAddr,
-		k8Client:   k8Client,
+		ListenAddr:         listenAddr,
+		k8Client:           k8Client,
+		DeploymentServices: deploymentService,
 	}
 }
 
