@@ -24,6 +24,21 @@ func (a *APIServer) deleteDeploymentHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"message": "Deployment deleted successfully"})
 }
 
+func (a *APIServer) getDeploymentHandler(ctx *gin.Context) {
+	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
+	name := strings.TrimPrefix(ctx.Param("name"), ":")
+
+	deployment, err := a.DeploymentServices.GetDeployment(namespace, name)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"unable to retrieve deployment error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusFound, deployment)
+
+}
+
 func (a *APIServer) patchDeploymentHandler(ctx *gin.Context) {
 	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
 

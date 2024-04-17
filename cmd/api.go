@@ -47,6 +47,8 @@ func (a *APIServer) HandleAppsGroupRoutes(router *gin.Engine) {
 	deployments := router.Group("/api/v1/apps/deployments")
 	{
 		// Route for creating a new Deployment
+		deployments.GET("/:namespace/:name", a.getDeploymentHandler)
+		// Route for creating a new Deployment
 		deployments.PUT("/:namespace", a.createDeploymentHandler)
 		// Route for deleting a Deployment
 		deployments.DELETE("/:namespace/:name", a.deleteDeploymentHandler)
