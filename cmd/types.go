@@ -6,4 +6,6 @@ type APIServer struct {
 	ListenAddr string
 	k8Client   *kubernetes.Clientset
 	DeploymentServices
+	PodServices
+	NamespaceServices
 }

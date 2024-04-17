@@ -17,11 +17,13 @@ func NewAPIServer(listenAddr string) *APIServer {
 	}
 
 	deploymentService := NewKubernetesDeploymentService(k8Client)
+	podService := NewKubernetesPodService(k8Client)
 
 	return &APIServer{
 		ListenAddr:         listenAddr,
 		k8Client:           k8Client,
 		DeploymentServices: deploymentService,
+		PodServices:        podService,
 	}
 }
 

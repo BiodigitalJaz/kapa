@@ -36,7 +36,6 @@ func (a *APIServer) getDeploymentHandler(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusFound, deployment)
-
 }
 
 func (a *APIServer) patchDeploymentHandler(ctx *gin.Context) {
@@ -99,7 +98,7 @@ func (a *APIServer) getPodLogsHandler(ctx *gin.Context) {
 	podName := strings.TrimPrefix(ctx.Param("podName"), ":")
 	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
 
-	logs, err := a.getPodLogs(podName, namespace)
+	logs, err := a.PodServices.GetPodLogs(podName, namespace)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error()})
@@ -114,7 +113,7 @@ func (a *APIServer) getPodLogsHandler(ctx *gin.Context) {
 func (a *APIServer) getNamespaceEventsHander(ctx *gin.Context) {
 	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
 
-	events, err := a.getNamespaceEvents(namespace)
+	events, err := a.NamespaceServices.GetNamespaceEvents(namespace)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error()})
@@ -127,7 +126,7 @@ func (a *APIServer) getNamespaceEventsHander(ctx *gin.Context) {
 }
 
 func (a *APIServer) getNamespacesHandler(ctx *gin.Context) {
-	namespaces, err := a.getNamespaces()
+	namespaces, err := a.NamespaceServices.GetNamespaces()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error()})
@@ -142,7 +141,7 @@ func (a *APIServer) getNamespacesHandler(ctx *gin.Context) {
 func (a *APIServer) getPodsHandler(ctx *gin.Context) {
 	namespace := strings.TrimPrefix(ctx.Param("namespace"), ":")
 
-	pods, err := a.getPods(namespace)
+	pods, err := a.PodServices.GetPods(namespace)
 	if err != nil {
 		log.Printf("error getting top pods: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
